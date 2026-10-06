@@ -49,27 +49,29 @@
   if (toTop) toTop.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" }); });
 
   /* --- Оглавление страницы с подсветкой текущего раздела --- */
-  var toc = document.querySelector(".toc[data-auto]");
+  var toc = document.querySelector(".toc");
   if (toc) {
     var list = toc.querySelector("ol");
-    var sections = Array.prototype.slice.call(document.querySelectorAll(".article > section[id]"));
-    sections.forEach(function (s) {
-      var h = s.querySelector(".section-title");
-      if (!h) return;
-      var li = document.createElement("li");
-      li.innerHTML = '<a href="#' + s.id + '">' + (h.getAttribute("data-short") || h.textContent) + "</a>";
-      list.appendChild(li);
-    });
-    var links = list.querySelectorAll("a");
-    if ("IntersectionObserver" in window) {
+    if (toc.hasAttribute("data-auto")) {
+      document.querySelectorAll(".article > section[id]").forEach(function (s) {
+        var h = s.querySelector(".section-title");
+        if (!h) return;
+        var li = document.createElement("li");
+        li.innerHTML = '<a href="#' + s.id + '">' + (h.getAttribute("data-short") || h.textContent) + "</a>";
+        list.appendChild(li);
+      });
+    }
+    var links = Array.prototype.slice.call(list.querySelectorAll('a[href^="#"]'));
+    var targets = links.map(function (a) { return document.getElementById(a.getAttribute("href").slice(1)); }).filter(Boolean);
+    if ("IntersectionObserver" in window && targets.length) {
       var visible = {};
       var io = new IntersectionObserver(function (entries) {
         entries.forEach(function (en) { visible[en.target.id] = en.isIntersecting; });
-        var firstVisible = sections.filter(function (s) { return visible[s.id]; })[0];
+        var firstVisible = targets.filter(function (s) { return visible[s.id] && !s.hidden; })[0];
         if (!firstVisible) return;
         links.forEach(function (a) { a.classList.toggle("is-active", a.getAttribute("href") === "#" + firstVisible.id); });
       }, { rootMargin: "-80px 0px -55% 0px" });
-      sections.forEach(function (s) { io.observe(s); });
+      targets.forEach(function (s) { io.observe(s); });
     }
   }
 
@@ -196,7 +198,7 @@
         if (j !== null) { e.preventDefault(); activate(tabs[j], true); }
       });
     });
-    var hash = (location.hash || "").slice(1);
+    var hash = (location.hash || "").slice(1).replace(/^tab-/, "");
     var byHash = tabs.filter(function (t) { return t.getAttribute("aria-controls") === "tab-" + hash; })[0];
     activate(byHash || tabs.filter(function (t) { return t.getAttribute("aria-selected") === "true"; })[0] || tabs[0]);
   });

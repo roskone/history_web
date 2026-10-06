@@ -93,23 +93,23 @@
   /* ---------------------------------------------------------------
      2. Интерактивная карта княжеств
      --------------------------------------------------------------- */
-  var LABEL_OFF = { r: [7, 4, "start"], l: [-7, 4, "end"], t: [0, -9, "middle"], b: [0, 16, "middle"] };
+  var LABEL_OFF = { r: [7, 4, "start"], l: [-7, 4, "end"], t: [0, -9, "middle"], b: [0, 16, "middle"], tl: [1, -9, "end"] };
   var REGION_LABELS = [
-    { t: "Половцы", x: 560, y: 1062, cls: "m-region-label" },
-    { t: "Волжская Булгария", x: 890, y: 772, cls: "m-region-label", anchor: "end" },
+    { t: "Половцы", x: 600, y: 1010, cls: "m-region-label" },
+    { t: "Волжская|Булгария", x: 876, y: 700, cls: "m-region-label", anchor: "end" },
     { t: "Литва", x: 178, y: 640, cls: "m-region-label" },
     { t: "Польша", x: 46, y: 812, cls: "m-region-label", rot: -90 },
-    { t: "Венгрия", x: 62, y: 1062, cls: "m-region-label" },
+    { t: "Венгрия", x: 70, y: 1020, cls: "m-region-label" },
     { t: "Швеция", x: 92, y: 250, cls: "m-region-label" },
-    { t: "Ливонский орден", x: 212, y: 566, cls: "m-region-label", size: 10 },
+    { t: "Ливонский орден", x: 212, y: 566, cls: "m-region-label" },
     { t: "Мордва", x: 780, y: 800, cls: "m-region-label" },
     { t: "Балтийское (Варяжское) море", x: 62, y: 560, cls: "m-sea-label", rot: -72 },
-    { t: "Белое море", x: 560, y: 22, cls: "m-sea-label" },
-    { t: "Чёрное (Русское) море", x: 300, y: 1100, cls: "m-sea-label" }
+    { t: "Белое море", x: 560, y: 34, cls: "m-sea-label" },
+    { t: "Белое море", x: 0, y: 0, cls: "skip" }
   ];
 
   function fullMap(host) {
-    var vb0 = [0, 0, 900, 1110];
+    var vb0 = [0, 10, 880, 1030];
     var vb = vb0.slice();
     var stage = host.querySelector(".map-stage");
     var panel = host.querySelector(".map-panel");
@@ -131,25 +131,51 @@
     });
     var gW = el("g", { "aria-hidden": "true" }, svg);
     M.water.forEach(function (d) { el("path", { d: d, class: "m-water" }, gW); });
-    M.rivers.forEach(function (d) { el("path", { d: d, class: "m-river", "stroke-width": 1.1 }, gW); });
-    M.lakeRims.forEach(function (d) { el("path", { d: d, class: "m-river", "stroke-width": .4 }, gW); });
+    M.rivers.forEach(function (d) { el("path", { d: d, class: "m-river", "stroke-width": 1 }, gW); });
+    M.lakeRims.forEach(function (d) { el("path", { d: d, class: "m-river", "stroke-width": .5 }, gW); });
     var gL = el("g", { "aria-hidden": "true" }, svg);
     REGION_LABELS.forEach(function (r) {
+      if (r.cls === "skip") return;
       var t = el("text", { x: r.x, y: r.y, class: r.cls, "text-anchor": r.anchor || "middle" }, gL);
       if (r.rot) t.setAttribute("transform", "rotate(" + r.rot + " " + r.x + " " + r.y + ")");
-      if (r.size) t.style.fontSize = r.size + "px";
-      t.textContent = r.t;
+      r.t.split("|").forEach(function (line, i) {
+        var ts = el("tspan", { x: r.x, dy: i ? "1.25em" : 0 }, t); ts.textContent = line;
+      });
     });
     var gC = el("g", { "aria-hidden": "true" }, svg);
+    var cityEls = [];
     M.cities.forEach(function (c) {
       var g = el("g", { class: "m-city " + c.k }, gC);
-      if (c.k === "capital") { el("circle", { cx: c.x, cy: c.y, r: 5.5 }, g); el("circle", { cx: c.x, cy: c.y, r: 2.3, class: "core" }, g); }
-      else el("circle", { cx: c.x, cy: c.y, r: c.k === "major" ? 3.4 : 2.6 }, g);
+      var outer = el("circle", { cx: c.x, cy: c.y, r: 4 }, g);
+      var core = c.k === "capital" ? el("circle", { cx: c.x, cy: c.y, r: 2, class: "core" }, g) : null;
       var o = LABEL_OFF[c.a] || LABEL_OFF.r;
-      var t = el("text", { x: c.x + o[0] * (c.k === "capital" ? 1.25 : 1), y: c.y + o[1] * (c.k === "capital" ? 1.15 : 1), "text-anchor": o[2] }, g);
+      var t = el("text", { x: c.x, y: c.y, "text-anchor": o[2] }, g);
       t.textContent = c.n;
+      cityEls.push({ c: c, o: o, outer: outer, core: core, t: t });
     });
+    // Размеры подписей и значков задаются в экранных пикселях и пересчитываются при масштабе
+    var SIZES = { capital: [13.5, 5, 2.2], major: [11.5, 3.6], minor: [10.5, 2.8] };
+    function relabel() {
+      var w = svg.getBoundingClientRect().width || 600;
+      var k = w / vb[2];
+      var boost = w < 520 ? 1.12 : 1;
+      cityEls.forEach(function (e) {
+        var sz = SIZES[e.c.k], fs = sz[0] * boost / k;
+        e.t.style.fontSize = fs + "px";
+        e.t.style.strokeWidth = (3 / k) + "px";
+        e.outer.setAttribute("r", sz[1] / k);
+        if (e.core) e.core.setAttribute("r", sz[2] / k);
+        var gap = (sz[1] + 3) / k;
+        var dx = e.o[0] > 0 ? gap : e.o[0] < 0 ? -gap : 0;
+        var dy = e.o[1] === 4 ? fs * 0.36 : e.o[1] < 0 ? -gap - fs * 0.15 : gap + fs * 0.8;
+        e.t.setAttribute("x", e.c.x + dx); e.t.setAttribute("y", e.c.y + dy);
+      });
+      svg.style.setProperty("--fs-region", (10.5 * boost / k) + "px");
+      svg.style.setProperty("--fs-sea", (12 * boost / k) + "px");
+    }
     stage.insertBefore(svg, stage.firstChild);
+    relabel();
+    if ("ResizeObserver" in window) new ResizeObserver(relabel).observe(svg); else window.addEventListener("resize", relabel);
 
     var tip = document.createElement("div");
     tip.className = "map-tip"; tip.setAttribute("aria-hidden", "true");
@@ -197,7 +223,7 @@
 
     // Перетаскивание и масштаб
     var drag = null, moved = false;
-    function setVB() { svg.setAttribute("viewBox", vb.map(function (v) { return v.toFixed(1); }).join(" ")); }
+    function setVB() { svg.setAttribute("viewBox", vb.map(function (v) { return v.toFixed(1); }).join(" ")); relabel(); }
     function zoom(f, cxu, cyu) {
       var nw = Math.min(vb0[2], Math.max(220, vb[2] * f));
       var nh = nw * vb0[3] / vb0[2];
@@ -205,7 +231,7 @@
       vb[0] = cxu - (cxu - vb[0]) * nw / vb[2];
       vb[1] = cyu - (cyu - vb[1]) * nh / vb[3];
       vb[2] = nw; vb[3] = nh; clamp(); setVB();
-      svg.classList.toggle("show-minor", vb[2] < 640 || showAll);
+      svg.classList.toggle("show-minor", vb[2] < 560 || showAll);
     }
     function clamp() {
       vb[0] = Math.min(vb0[0] + vb0[2] - vb[2], Math.max(vb0[0], vb[0]));
@@ -258,7 +284,7 @@
         if (a === "in") zoom(1 / 1.4);
         if (a === "out") zoom(1.4);
         if (a === "reset") { vb = vb0.slice(); setVB(); svg.classList.toggle("show-minor", showAll); }
-        if (a === "cities") { showAll = !showAll; b.setAttribute("aria-pressed", String(showAll)); svg.classList.toggle("show-minor", showAll || vb[2] < 640); }
+        if (a === "cities") { showAll = !showAll; b.setAttribute("aria-pressed", String(showAll)); svg.classList.toggle("show-minor", showAll || vb[2] < 560); }
       });
     });
 
