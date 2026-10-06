@@ -70,10 +70,18 @@
         var firstVisible = targets.filter(function (s) { return visible[s.id] && !s.hidden; })[0];
         if (!firstVisible) return;
         links.forEach(function (a) { a.classList.toggle("is-active", a.getAttribute("href") === "#" + firstVisible.id); });
-      }, { rootMargin: "-80px 0px -55% 0px" });
+      }, { rootMargin: "-100px 0px -55% 0px" });
       targets.forEach(function (s) { io.observe(s); });
     }
   }
+
+  /* --- Подписи столбцов для таблиц на телефоне --- */
+  document.querySelectorAll(".table-wrap table").forEach(function (t) {
+    var heads = Array.prototype.map.call(t.querySelectorAll("thead th"), function (th) { return th.textContent.trim(); });
+    t.querySelectorAll("tbody tr").forEach(function (tr) {
+      Array.prototype.forEach.call(tr.children, function (cell, i) { if (cell.tagName === "TD" && heads[i]) cell.setAttribute("data-label", heads[i]); });
+    });
+  });
 
   /* --- Точки-«уделы» на главной --- */
   document.querySelectorAll("[data-dots]").forEach(function (d) {

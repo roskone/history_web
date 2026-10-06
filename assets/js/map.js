@@ -23,9 +23,9 @@
      1. Распадающаяся карта (главная)
      --------------------------------------------------------------- */
   var HERO_LABEL_POS = {
-    novgorod: [520, 270], vladimir: [668, 500], smolensk: [440, 668], polotsk: [262, 672],
-    chernigov: [478, 820], kiev: [282, 918], pereyaslavl: [404, 968], turov: [226, 818],
-    galich: [128, 905], ryazan: [664, 728]
+    novgorod: [520, 270], vladimir: [668, 500], smolensk: [448, 668], polotsk: [280, 722],
+    chernigov: [478, 820], kiev: [282, 918], pereyaslavl: [392, 972], turov: [226, 818],
+    galich: [128, 905], ryazan: [656, 728]
   };
   function heroMap(host) {
     var vb = [0, -30, 880, 1090];
@@ -158,7 +158,7 @@
     function relabel() {
       var w = svg.getBoundingClientRect().width || 600;
       var k = w / vb[2];
-      var boost = w < 520 ? 1.12 : 1;
+      var boost = 1;
       cityEls.forEach(function (e) {
         var sz = SIZES[e.c.k], fs = sz[0] * boost / k;
         e.t.style.fontSize = fs + "px";
@@ -170,6 +170,16 @@
         var dy = e.o[1] === 4 ? fs * 0.36 : e.o[1] < 0 ? -gap - fs * 0.15 : gap + fs * 0.8;
         e.t.setAttribute("x", e.c.x + dx); e.t.setAttribute("y", e.c.y + dy);
       });
+      // подписи не должны вылезать за края карты
+      cityEls.forEach(function (e) {
+        try {
+          var bb = e.t.getBBox();
+          if (bb.x < vb[0] + 2) e.t.setAttribute("x", +e.t.getAttribute("x") + (vb[0] + 2 - bb.x));
+          if (bb.x + bb.width > vb[0] + vb[2] - 2) e.t.setAttribute("x", +e.t.getAttribute("x") - (bb.x + bb.width - vb[0] - vb[2] + 2));
+        } catch (err) { /* скрытая карта */ }
+      });
+      svg.classList.toggle("compact", w < 520 && vb[2] > 560);
+      svg.classList.toggle("is-zoomed", vb[2] < vb0[2]);
       svg.style.setProperty("--fs-region", (10.5 * boost / k) + "px");
       svg.style.setProperty("--fs-sea", (12 * boost / k) + "px");
     }
@@ -291,7 +301,11 @@
     panel.addEventListener("click", function (e) {
       var a = e.target.closest("[data-goto]"); if (!a) return;
       var tabBtn = document.querySelector('.tab[aria-controls="tab-' + a.getAttribute("data-goto") + '"]');
-      if (tabBtn) tabBtn.click();
+      if (tabBtn) {
+        e.preventDefault(); tabBtn.click();
+        var c = document.getElementById("centry");
+        if (c) c.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      }
     });
     document.querySelectorAll("[data-show-on-map]").forEach(function (b) {
       b.addEventListener("click", function () {
