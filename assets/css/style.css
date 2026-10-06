@@ -187,7 +187,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 2.5rem 0; }
    Шапка и навигация
    ========================================================================== */
 .site-header {
-  position: sticky; top: 0; z-index: 50;
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50;
   height: var(--header-h);
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: saturate(1.4) blur(10px);
@@ -435,9 +435,8 @@ details.disclosure .disclosure-body { padding: 0 18px 16px; }
 .term-pop strong { display: block; font-family: var(--f-display); font-weight: 400; font-size: 1.2rem; margin-bottom: 4px; }
 
 /* Раскрытие при прокрутке */
-.js .reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; }
-.js .reveal.is-visible { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { .js .reveal { opacity: 1; transform: none; transition: none; } }
+/* Блоки видны сразу: страница полна в состоянии покоя (важно для превью и печати) */
+.reveal { opacity: 1; }
 
 /* Разделитель-орнамент */
 .ornament { display: flex; align-items: center; gap: 14px; color: var(--cinnabar); margin: 2.4rem 0; }
@@ -461,7 +460,7 @@ details.disclosure .disclosure-body { padding: 0 18px 16px; }
 }
 .hero-grid {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(20px, 4vw, 56px);
-  align-items: center; min-height: min(calc(100vh - var(--header-h)), 860px); padding: clamp(40px, 6vw, 72px) 0;
+  align-items: center; padding: clamp(40px, 6vw, 72px) 0;
   position: relative;
 }
 .hero .eyebrow { color: var(--hero-ink-2); }
