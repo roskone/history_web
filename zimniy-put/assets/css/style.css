@@ -286,17 +286,17 @@ li + li { margin-top: .3em; }
   background: linear-gradient(var(--paper), var(--paper)); cursor: grab; scrollbar-width: thin; -webkit-overflow-scrolling: touch;
 }
 .scroll.dragging { cursor: grabbing; user-select: none; }
-.scroll-inner { position: relative; height: 470px; }
-.axis { position: absolute; left: 0; right: 0; top: 232px; height: 2px; background: var(--spruce); }
+.scroll-inner { position: relative; height: 520px; }
+.axis { position: absolute; left: 0; right: 0; top: 262px; height: 2px; background: var(--spruce); }
 .tick { position: absolute; top: 224px; font-family: var(--f-mono); font-size: .7rem; color: var(--spruce-3); transform: translateX(-50%); }
 .tick::before { content: ""; position: absolute; left: 50%; top: -2px; width: 1px; height: 18px; background: var(--spruce-3); }
 .tick span { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
-.era-band { position: absolute; top: 236px; height: 22px; font-family: var(--f-mono); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--spruce-2); background: var(--ice); padding: 4px 8px; white-space: nowrap; overflow: hidden; border-right: 2px solid var(--snow); }
-.ev { position: absolute; width: 210px; transform: translateX(-12px); }
+.era-band { position: absolute; top: 266px; height: 22px; font-family: var(--f-mono); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--spruce-2); background: var(--ice); padding: 4px 8px; white-space: nowrap; overflow: hidden; border-right: 2px solid var(--snow); }
+.ev { position: absolute; width: 236px; transform: translateX(-12px); }
 .ev::before { content: ""; position: absolute; left: 7px; width: 2px; background: var(--c, var(--spruce-3)); opacity: .55; }
-.ev.up { bottom: calc(470px - 222px); }
+.ev.up { bottom: calc(520px - 252px); }
 .ev.up::before { top: 100%; height: var(--stem); }
-.ev.down { top: 262px; }
+.ev.down { top: 292px; }
 .ev.down::before { bottom: 100%; height: var(--stem); }
 .ev .dot { position: absolute; left: 3px; width: 10px; height: 10px; border-radius: 50%; background: var(--c, var(--spruce-3)); border: 2px solid var(--paper); }
 .ev.up .dot { top: calc(100% + var(--stem) - 5px); }

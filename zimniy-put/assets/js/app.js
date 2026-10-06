@@ -171,25 +171,25 @@
   /* ---------- Летопись-свиток ---------- */
   var sc = document.querySelector("[data-scroll]");
   if (sc && C.timeline) {
-    var Y0 = 1040, Y1 = 1535, PX = 12, W = (Y1 - Y0) * PX + 80;
+    // события стоят с равным шагом: в плотные годы (1237–1243) карточки не налезают друг на друга
+    var EV = C.timeline.slice().sort(function (a, b) { return a.year - b.year; });
+    var STEP = 128, W = 80 + EV.length * STEP + 140;
     var inner = sc.querySelector(".scroll-inner");
     inner.style.width = W + "px";
-    var xOf = function (y) { return 40 + (y - Y0) * PX; };
+    var xi = function (i) { return 40 + i * STEP; };
+    var xOf = function (y) { var i = 0; while (i < EV.length - 1 && EV[i].year < y) i++; return xi(i); };
     var html = ['<div class="axis"></div>'];
-    for (var y = 1050; y <= 1530; y += 10) html.push('<div class="tick" style="left:' + xOf(y) + 'px"><span>' + (y % 50 === 0 ? y : "") + "</span></div>");
-    [[1054, 1132, "Русь Ярославичей"], [1132, 1237, "Удельная Русь"], [1237, 1325, "Нашествие и Орда"], [1325, 1521, "Собирание земель вокруг Москвы"]].forEach(function (e) {
-      html.push('<div class="era-band" style="left:' + xOf(e[0]) + "px;width:" + (xOf(e[1]) - xOf(e[0])) + 'px">' + e[2] + "</div>");
+    [[1054, 1132, "Русь Ярославичей"], [1132, 1237, "Удельная Русь"], [1237, 1325, "Нашествие и Орда"], [1325, 1600, "Собирание земель вокруг Москвы"]].forEach(function (e) {
+      var idx = EV.map(function (v, i) { return v.year >= e[0] && v.year < e[1] ? i : -1; }).filter(function (i) { return i >= 0; });
+      if (!idx.length) return;
+      var a = xi(idx[0]) - 10, b = xi(idx[idx.length - 1]) + STEP - 10;
+      html.push('<div class="era-band" style="left:' + a + "px;width:" + (b - a) + 'px">' + e[2] + "</div>");
     });
-    var lanes = [-1e9, -1e9, -1e9, -1e9], STEMS = [16, 122, 16, 122], alt = false;
     var LAND = { all: "var(--spruce-3)", kiev: "#b9472f", chernigov: "#7a5c94", smolensk: "#b8962f", novgorod: "#4f7f6a", vladimir: "#3f6e9c", galich: "#a8711f", ryazan: "#7f9348", polotsk: "#b46a5c", moscow: "#8a3b52", horde: "#555" };
-    C.timeline.slice().sort(function (a, b) { return a.year - b.year; }).forEach(function (e) {
-      var x = xOf(e.year), best = 0, gap = -1e9;
-      var order = (alt = !alt) ? [0, 2, 1, 3] : [2, 0, 3, 1];
-      for (var oi = 0; oi < 4; oi++) { var i = order[oi], g = x - lanes[i]; if (g >= 200) { best = i; gap = g; break; } if (g > gap) { gap = g; best = i; } }
-      lanes[best] = x;
-      var up = best < 2, stem = STEMS[best];
-      var pos = up ? "bottom:" + (470 - 232 + stem) + "px" : "top:" + (236 + stem) + "px";
-      html.push('<div class="ev ' + (up ? "up" : "down") + '" data-kind="' + esc(e.kind) + '" style="left:' + x + "px;" + pos + ";--stem:" + stem + "px;--c:" + (LAND[e.land] || LAND.all) + '"><i class="dot"></i>' +
+    EV.forEach(function (e, i) {
+      var up = i % 2 === 0, stem = (i % 4 < 2) ? 18 : 18;
+      var pos = up ? "bottom:" + (520 - 262 + stem) + "px" : "top:" + (266 + stem) + "px";
+      html.push('<div class="ev ' + (up ? "up" : "down") + '" data-kind="' + esc(e.kind) + '" style="left:' + xi(i) + "px;" + pos + ";--stem:" + stem + "px;--c:" + (LAND[e.land] || LAND.all) + '"><i class="dot"></i>' +
         '<div class="ev-card"><b>' + e.year + "</b><strong>" + esc(e.title) + "</strong><span>" + esc(e.text) + "</span></div></div>");
     });
     inner.innerHTML = html.join("");
